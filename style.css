@@ -599,3 +599,23 @@ html, body {
 [hidden] {
   display: none !important;
 }
+
+/* 不能直接分享圖片時的教學區塊 */
+.share-help {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1.5px solid rgba(250, 204, 21, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-help p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fde68a;
+  text-align: left;
+}

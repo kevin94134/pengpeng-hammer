@@ -7,7 +7,7 @@
   <meta name="description" content="面對手持黑槌的頭目彭彭，你能拿木板撐過幾秒？快來挑戰人類反應極限！" />
   <meta property="og:title" content="彭彭大槌王：平衡木生死鬥" />
   <meta property="og:description" content="吼拉吼拉吼拉！面對黑色巨槌無情推進，你能存活幾秒？" />
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <div id="app-wrapper">
@@ -92,7 +92,7 @@
           <div class="share-card-container">
             <canvas id="share-canvas" width="720" height="960"></canvas>
             <img id="share-image-preview" alt="戰績分享圖（長按可儲存）" />
-            <div class="save-hint">📱 手機可直接點擊下方「分享戰績圖」或長按上方圖片儲存</div>
+            <div class="save-hint">📱 點下方「分享戰績截圖」，或長按上方圖片儲存</div>
           </div>
 
           <div class="result-actions">
@@ -100,6 +100,16 @@
             <div class="action-row">
               <button id="btn-download" class="secondary-btn">💾 下載圖片</button>
               <button id="btn-retry" class="secondary-btn retry-btn">🔄 再戰一場</button>
+            </div>
+
+            <!-- 不能直接分享圖片時（LINE 等 App 內建瀏覽器）顯示的教學與替代分享方式 -->
+            <div id="share-help" class="share-help" hidden>
+              <p id="share-help-text"></p>
+              <button id="btn-open-browser" class="primary-btn" hidden>🌐 用手機瀏覽器開啟（可分享圖片）</button>
+              <div class="action-row">
+                <button id="btn-share-line" class="secondary-btn">💬 用 LINE 傳連結</button>
+                <button id="btn-copy-link" class="secondary-btn">🔗 複製連結</button>
+              </div>
             </div>
           </div>
         </div>
@@ -165,6 +175,6 @@
     </div>
   </div>
 
-  <script src="game.js?v=3"></script>
+  <script src="game.js?v=4"></script>
 </body>
 </html>

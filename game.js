@@ -1403,36 +1403,144 @@ function generateShareCardImage() {
   } catch (e) {
     console.error('Failed to generate share image:', e);
   }
-}
 
-// 分享或下載戰績截圖
-async function shareResultImage() {
-  try {
-    const blob = await new Promise(resolve => shareCanvas.toBlob(resolve, 'image/png'));
-    if (!blob) return;
-
-    const file = new File([blob], `彭彭大槌王_${gameState.survivalTime.toFixed(2)}秒.png`, { type: 'image/png' });
-    const shareData = {
-      title: '彭彭大槌王：平衡木生死鬥',
-      text: `我在《彭彭大槌王》拿木板撐了 ${gameState.survivalTime.toFixed(2)} 秒！獲得「${getSurvivalRank(gameState.survivalTime).title}」稱號，你敢來挑戰嗎？`,
-      files: [file]
-    };
-
-    if (navigator.canShare && navigator.canShare(shareData)) {
-      await navigator.share(shareData);
-      return;
+  // 先把圖片檔準備好：iPhone Safari 只允許在「點擊當下」叫出分享選單，
+  // 點了才轉檔會超過時限被擋，所以結算時就先轉好
+  shareFile = null;
+  shareCanvas.toBlob(blob => {
+    if (blob) {
+      shareFile = new File([blob], `彭彭大槌王_${gameState.survivalTime.toFixed(2)}秒.png`, { type: 'image/png' });
     }
-  } catch (err) {
-    // 若使用者取消或瀏覽器不支援直接分享檔案，退回下載圖片
-  }
-  downloadResultImage();
+  }, 'image/png');
+  hideShareHelp();
 }
 
+// ==========================================
+// 分享戰績（Android / iPhone / LINE 等 App 內建瀏覽器）
+// ==========================================
+// LINE、Facebook、Instagram 等 App 的內建瀏覽器不支援分享圖片檔、也不能下載，
+// 這時改成：教玩家長按圖片儲存、用 LINE 傳連結，或（LINE 限定）跳到手機瀏覽器開啟同一份戰績
+const UA = navigator.userAgent;
+const IS_LINE = /\bLine\//i.test(UA);
+const IS_IN_APP = IS_LINE || /FBAN|FBAV|Instagram|MicroMessenger|KAKAOTALK/i.test(UA);
+const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const GAME_URL = location.origin + location.pathname;
+
+let shareFile = null;
+
+const shareHelp = document.getElementById('share-help');
+const shareHelpText = document.getElementById('share-help-text');
+const btnOpenBrowser = document.getElementById('btn-open-browser');
+const btnShareLine = document.getElementById('btn-share-line');
+const btnCopyLink = document.getElementById('btn-copy-link');
+
+function getShareText() {
+  return `我在《彭彭大槌王》拿木板撐了 ${gameState.survivalTime.toFixed(2)} 秒！獲得「${getSurvivalRank(gameState.survivalTime).title}」稱號，你敢來挑戰嗎？`;
+}
+
+function hideShareHelp() {
+  shareHelp.hidden = true;
+}
+
+// 不能直接分享圖片時，顯示對應手機系統的儲存教學與其他分享方式
+function showShareHelp() {
+  const how = IS_IOS ? '長按上方戰績圖 →「加入照片」或「分享」' : '長按上方戰績圖 →「下載圖片」';
+  shareHelpText.textContent = IS_LINE
+    ? `LINE 裡面不能直接分享圖片。可以：${how}，或點下面按鈕改用手機瀏覽器開啟後再分享。`
+    : `這個瀏覽器不能直接分享圖片，請${how}，再到聊天室傳給朋友。`;
+  btnOpenBrowser.hidden = !IS_LINE;
+  shareHelp.hidden = false;
+  shareHelp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// 分享戰績圖：能分享圖片檔就直接叫出系統分享選單（Android Chrome、iPhone Safari）
+function shareResultImage() {
+  const shareData = { title: '彭彭大槌王：平衡木生死鬥', text: `${getShareText()}\n${GAME_URL}`, files: shareFile ? [shareFile] : [] };
+  if (shareFile && navigator.canShare && navigator.canShare(shareData)) {
+    navigator.share(shareData).catch(err => {
+      // 使用者自己按取消就不用再提示；其他錯誤（App 內建瀏覽器擋掉）改顯示教學
+      if (err && err.name !== 'AbortError') showShareHelp();
+    });
+    return;
+  }
+  showShareHelp();
+}
+
+// 下載圖片：App 內建瀏覽器擋下載，改顯示長按儲存教學
 function downloadResultImage() {
+  if (IS_IN_APP) {
+    showShareHelp();
+    return;
+  }
   const link = document.createElement('a');
   link.download = `彭彭大槌王_戰績_${gameState.survivalTime.toFixed(2)}秒.png`;
   link.href = shareCanvas.toDataURL('image/png');
+  document.body.appendChild(link);
   link.click();
+  link.remove();
+}
+
+// 用 LINE 傳「戰績文字 + 遊戲連結」給朋友（LINE 官方分享網址，Android / iPhone 都支援）
+function shareToLine() {
+  const text = `${getShareText()}\n${GAME_URL}`;
+  location.href = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+}
+
+function copyGameLink() {
+  const text = `${getShareText()}\n${GAME_URL}`;
+  const done = () => { btnCopyLink.textContent = '✅ 已複製'; setTimeout(() => { btnCopyLink.textContent = '🔗 複製連結'; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => legacyCopy(text, done));
+  } else {
+    legacyCopy(text, done);
+  }
+}
+
+// 舊式複製（部分 App 內建瀏覽器沒有 clipboard API）
+function legacyCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  ta.remove();
+}
+
+// LINE 官方參數 openExternalBrowser=1：在手機預設瀏覽器（Safari / Chrome）重新開啟。
+// 戰績放在網址裡帶過去，開啟後直接顯示同一張戰績卡，就能正常分享圖片
+function openInExternalBrowser() {
+  const params = new URLSearchParams({
+    openExternalBrowser: '1',
+    r: gameState.survivalTime.toFixed(2),
+    b: String(gameState.blocksCount),
+    s: String(gameState.maxStageReached)
+  });
+  location.href = `${GAME_URL}?${params}`;
+}
+
+// 從網址帶回來的戰績（openInExternalBrowser 跳轉過來時）：直接顯示戰績卡
+function restoreResultFromUrl() {
+  const q = new URLSearchParams(location.search);
+  const t = parseFloat(q.get('r'));
+  if (!(t > 0) || t > 999) return;
+  gameState.survivalTime = t;
+  gameState.blocksCount = Math.max(0, parseInt(q.get('b'), 10) || 0);
+  gameState.maxStageReached = Math.min(4, Math.max(1, parseInt(q.get('s'), 10) || 1));
+  startOverlay.classList.remove('active');
+  const show = () => {
+    generateShareCardImage();
+    gameoverOverlay.classList.add('active');
+  };
+  // 等圖片載入完再畫戰績卡
+  if (imagesLoaded >= totalImages) show();
+  else {
+    const wait = setInterval(() => {
+      if (imagesLoaded >= totalImages) { clearInterval(wait); show(); }
+    }, 100);
+  }
 }
 
 // ==========================================
@@ -1490,6 +1598,9 @@ btnStart.addEventListener('click', startGame);
 btnRetry.addEventListener('click', startGame);
 btnShare.addEventListener('click', shareResultImage);
 btnDownload.addEventListener('click', downloadResultImage);
+btnOpenBrowser.addEventListener('click', openInExternalBrowser);
+btnShareLine.addEventListener('click', shareToLine);
+btnCopyLink.addEventListener('click', copyGameLink);
 
 btnMute.addEventListener('click', () => {
   sound.muted = !sound.muted;
@@ -1524,4 +1635,5 @@ btnResetSettings.addEventListener('click', () => {
 
 // 啟動渲染迴圈
 syncSettingsUI();
+restoreResultFromUrl();
 requestAnimationFrame(gameLoop);

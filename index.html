@@ -7,7 +7,13 @@
   <meta name="description" content="面對手持黑槌的頭目彭彭，你能拿木板撐過幾秒？快來挑戰人類反應極限！" />
   <meta property="og:title" content="彭彭大槌王：平衡木生死鬥" />
   <meta property="og:description" content="吼拉吼拉吼拉！面對黑色巨槌無情推進，你能存活幾秒？" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://kevin94134.github.io/pengpeng-hammer/" />
+  <meta property="og:image" content="https://kevin94134.github.io/pengpeng-hammer/assets/og/default.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <div id="app-wrapper">
@@ -92,13 +98,13 @@
           <div class="share-card-container">
             <canvas id="share-canvas" width="720" height="960"></canvas>
             <img id="share-image-preview" alt="戰績分享圖（長按可儲存）" />
-            <div class="save-hint">📱 點下方「分享戰績截圖」，或長按上方圖片儲存</div>
+            <div class="save-hint">📱 分享後，朋友點連結就能看到你的戰績卡</div>
           </div>
 
           <div class="result-actions">
-            <button id="btn-share" class="primary-btn share-btn">📤 分享戰績截圖給朋友</button>
+            <button id="btn-share" class="primary-btn share-btn">📤 分享戰績給朋友</button>
             <div class="action-row">
-              <button id="btn-download" class="secondary-btn">💾 下載圖片</button>
+              <button id="btn-download" class="secondary-btn">💾 儲存戰績圖</button>
               <button id="btn-retry" class="secondary-btn retry-btn">🔄 再戰一場</button>
             </div>
 
@@ -175,6 +181,6 @@
     </div>
   </div>
 
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=5"></script>
 </body>
 </html>

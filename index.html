@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>彭彭大槌王：平衡木生死鬥</title>
+  <meta name="description" content="面對手持黑槌的頭目彭彭，你能拿木板撐過幾秒？快來挑戰人類反應極限！" />
+  <meta property="og:title" content="彭彭大槌王：平衡木生死鬥" />
+  <meta property="og:description" content="吼拉吼拉吼拉！面對黑色巨槌無情推進，你能存活幾秒？" />
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <div id="app-wrapper">
+    <!-- 主遊戲舞台 (9:16 手機比例) -->
+    <div id="game-container">
+      <canvas id="game-canvas" width="720" height="1280"></canvas>
+
+      <!-- 頂部 HUD：血條、秒數、難度階段、設定與音量按鈕 -->
+      <div id="hud-top">
+        <div class="hud-row">
+          <div class="hp-box">
+            <div class="hp-icon">❤️</div>
+            <div class="hp-bar-outer">
+              <div id="hp-bar-damage" class="hp-bar-damage"></div>
+              <div id="hp-bar-fill" class="hp-bar-fill"></div>
+              <span id="hp-text" class="hp-text">100 / 100</span>
+            </div>
+          </div>
+
+          <div class="hud-controls">
+            <button id="btn-mute" class="icon-btn" title="音效開關" aria-label="音效開關">🔊</button>
+            <button id="btn-settings" class="icon-btn" title="難度與秒數微調" aria-label="難度微調" hidden>⚙️</button>
+          </div>
+        </div>
+
+        <div class="hud-timer-row">
+          <div id="stage-badge" class="stage-badge stage-1">Lv.1 輕浮微笑</div>
+          <div class="timer-box">
+            <span class="timer-label">SURVIVAL TIME</span>
+            <span id="timer-display" class="timer-digits">00.00<small>s</small></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頭目台詞氣泡 -->
+      <div id="boss-speech" class="boss-speech hidden">呵呵～來囉！</div>
+
+      <!-- 受傷紅屏閃爍層 -->
+      <div id="damage-flash" class="damage-flash"></div>
+
+      <!-- 首頁開始畫面覆蓋層 -->
+      <div id="start-overlay" class="overlay active">
+        <div class="start-card">
+          <div class="title-badge">⚡ 街機反應極限挑戰 ⚡</div>
+          <h1 class="game-title">彭彭大槌王</h1>
+          <p class="game-subtitle">平衡木九宮格・生死格擋戰</p>
+
+          <div class="hero-preview-wrap">
+            <img id="hero-preview-img" src="assets/images/boss_preview_v2.jpg" alt="頭目預覽" />
+            <div class="hero-tag">BOSS：高額頭馬尾黑槌女王</div>
+          </div>
+
+          <div class="how-to-play">
+            <div class="rule-item">
+              <span class="rule-icon">🎯</span>
+              <div><strong>紅框亮起預警</strong>：注意九宮格哪一格亮起紅圈、黑槌正在推進放大！</div>
+            </div>
+            <div class="rule-item">
+              <span class="rule-icon">🪵</span>
+              <div><strong>點擊拿木板格擋</strong>：在黑槌填滿圓圈前，點擊該格舉起木板擋下攻擊！</div>
+            </div>
+            <div class="rule-item">
+              <span class="rule-icon">🔥</span>
+              <div><strong>四段難度暴走</strong>：從輕浮微笑到「吼拉吼拉」脹紅臉連擊，看你能撐幾秒！</div>
+            </div>
+          </div>
+
+          <button id="btn-start" class="primary-btn pulse-btn">🪵 舉起木板・開始挑戰！</button>
+          <button id="btn-open-tuner" class="secondary-btn" hidden>⚙️ 調整難度與反應秒數設定</button>
+        </div>
+      </div>
+
+      <!-- 結算與截圖分享覆蓋層 -->
+      <div id="gameover-overlay" class="overlay">
+        <div class="result-modal">
+          <div class="result-header">
+            <span class="ko-badge">K.O. 頭目獲勝！</span>
+            <h2>你被黑槌推下平衡木了！</h2>
+          </div>
+
+          <!-- 動態產生的社群分享卡圖片預覽 -->
+          <div class="share-card-container">
+            <canvas id="share-canvas" width="720" height="960"></canvas>
+            <img id="share-image-preview" alt="戰績分享圖（長按可儲存）" />
+            <div class="save-hint">📱 手機可直接點擊下方「分享戰績圖」或長按上方圖片儲存</div>
+          </div>
+
+          <div class="result-actions">
+            <button id="btn-share" class="primary-btn share-btn">📤 分享戰績截圖給朋友</button>
+            <div class="action-row">
+              <button id="btn-download" class="secondary-btn">💾 下載圖片</button>
+              <button id="btn-retry" class="secondary-btn retry-btn">🔄 再戰一場</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 難度與反應秒數即時微調面板 (供測試與平衡調整) -->
+      <div id="settings-overlay" class="overlay">
+        <div class="settings-modal">
+          <div class="settings-header">
+            <h3>⚙️ 遊戲難度與人類反應秒數設定</h3>
+            <button id="btn-close-settings" class="close-btn">✕</button>
+          </div>
+          <p class="settings-desc">可隨時微調各階段黑槌推進速度、血量與原音開關，調完立即生效：</p>
+
+          <div class="setting-group">
+            <label>玩家被擊中幾次陣亡（總耐打次數）：<span id="val-max-hits">6 次</span></label>
+            <input type="range" id="opt-max-hits" min="3" max="10" step="1" value="6" />
+          </div>
+
+          <div class="setting-group">
+            <label>Lv.1 初期（微笑）黑槌推進秒數：<span id="val-lv1-time">1.00 秒</span></label>
+            <input type="range" id="opt-lv1-time" min="0.60" max="1.60" step="0.05" value="1.00" />
+          </div>
+
+          <div class="setting-group">
+            <label>Lv.2 二級（嚴肅）黑槌推進秒數：<span id="val-lv2-time">0.75 秒</span></label>
+            <input type="range" id="opt-lv2-time" min="0.45" max="1.20" step="0.05" value="0.75" />
+          </div>
+
+          <div class="setting-group">
+            <label>Lv.3 三級（出力）黑槌推進秒數：<span id="val-lv3-time">0.55 秒</span></label>
+            <input type="range" id="opt-lv3-time" min="0.35" max="0.90" step="0.05" value="0.55" />
+          </div>
+
+          <div class="setting-group">
+            <label>Lv.4 四級（脹紅臉吼拉）黑槌推進秒數：<span id="val-lv4-time">0.36 秒</span></label>
+            <input type="range" id="opt-lv4-time" min="0.20" max="0.65" step="0.02" value="0.36" />
+          </div>
+
+          <div class="setting-group">
+            <label>進入 Lv.4 暴走必死階段的秒數：<span id="val-lv4-start">25 秒</span></label>
+            <input type="range" id="opt-lv4-start" min="15" max="45" step="1" value="25" />
+          </div>
+
+          <div class="setting-group">
+            <label>背景音樂 (BGM) 音量：<span id="val-bgm-vol">18%</span></label>
+            <input type="range" id="opt-bgm-vol" min="0" max="50" step="2" value="18" />
+          </div>
+
+          <div class="setting-group checkbox-group">
+            <label>
+              <input type="checkbox" id="opt-real-voice" />
+              頭目改用影片真人原音（預設為中文配音）
+            </label>
+          </div>
+
+          <div class="settings-footer">
+            <button id="btn-reset-settings" class="secondary-btn">恢復預設 (約25秒)</button>
+            <button id="btn-save-settings" class="primary-btn">✅ 儲存並返回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js?v=3"></script>
+</body>
+</html>
